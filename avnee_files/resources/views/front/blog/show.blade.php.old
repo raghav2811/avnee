@@ -1,0 +1,130 @@
+@extends('layouts.front.' . (session('theme', 'studio')))
+
+@push('schema')
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "{{ $post->title }}",
+  "image": [
+    "{{ Storage::url($post->image) }}"
+  ],
+  "datePublished": "{{ $post->created_at->toIso8601String() }}",
+  "author": [{
+    "@type": "Person",
+    "name": "AVNEE Team"
+  }]
+}
+</script>
+@endpush
+
+@section('content')
+@php
+    $brandId = session('brand_id', 1);
+    $isDark = $brandId == 2;
+    $bgColor = $isDark ? 'bg-[#0f0a14]' : 'bg-[#F8C8DC]';
+    $textColor = $isDark ? 'text-white' : 'text-gray-900';
+    $mutedColor = $isDark ? 'text-gray-400' : 'text-gray-700';
+    $lineColor = $isDark ? 'border-white/10' : 'border-black/10';
+@endphp
+<article class="{{ $bgColor }} {{ $textColor }} min-h-screen pt-24 pb-16 transition-colors duration-700">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Breadcrumbs -->
+        <nav class="flex items-center text-[9px] font-bold uppercase tracking-[0.3em] {{ $mutedColor }} mb-8 border-b {{ $lineColor }} pb-4">
+            <a href="/" class="hover:{{ $textColor }} transition-colors">Home</a>
+            <span class="mx-3 text-[8px] opacity-30">/</span>
+            <a href="{{ route('front.blog.index') }}" class="hover:{{ $textColor }} transition-colors">Journal</a>
+            <span class="mx-3 text-[8px] opacity-30">/</span>
+            <span class="{{ $textColor }}">{{ optional($post->category)->name ?? 'Journal' }}</span>
+        </nav>
+
+        <!-- Header -->
+        <header class="mb-12">
+            <h1 class="text-3xl md:text-5xl font-heading font-normal leading-tight mb-6 uppercase tracking-tight {{ $textColor }} italic">{{ $post->title }}</h1>
+            <div class="flex items-center text-[9px] font-bold {{ $mutedColor }} uppercase tracking-[0.3em] gap-4">
+                <span class="flex items-center gap-2">
+                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    {{ $post->created_at->format('F d, Y') }}
+                </span>
+                <span class="w-1 h-1 bg-current opacity-20 rounded-full"></span>
+                <span class="flex items-center gap-2">
+                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                    {{ number_format($post->views) }} Views
+                </span>
+            </div>
+        </header>
+
+        <!-- Featured Image -->
+        @if($post->image)
+            <div class="mb-12 aspect-[16/9] bg-gray-900 overflow-hidden rounded-sm shadow-2xl">
+                <img src="{{ Storage::url($post->image) }}" alt="{{ $post->title }}" class="w-full h-full object-cover">
+            </div>
+        @endif
+
+        <!-- Content -->
+        <div class="prose {{ $isDark ? 'prose-invert' : 'prose-gray' }} prose-lg max-w-none mb-16 {{ $isDark ? 'text-gray-300' : 'text-gray-800' }} leading-relaxed font-light tracking-wide first-letter:text-5xl first-letter:font-bold first-letter:text-[#b87333] first-letter:mr-3 first-letter:float-left">
+            {!! nl2br(e($post->content)) !!}
+        </div>
+
+        <!-- Footer -->
+        <footer class="border-t border-gray-800 pt-12">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+                <div class="flex items-center gap-4">
+                    <span class="text-xs uppercase tracking-widest text-gray-500 italic">Share this story:</span>
+                    <div class="flex gap-4">
+                        <a href="#" class="w-8 h-8 rounded-full border border-gray-800 flex items-center justify-center text-gray-400 hover:text-white hover:border-white transition-all">
+                            <i class="fa-brands fa-facebook-f text-xs"></i>
+                        </a>
+                        <a href="#" class="w-8 h-8 rounded-full border border-gray-800 flex items-center justify-center text-gray-400 hover:text-white hover:border-white transition-all">
+                            <i class="fa-brands fa-twitter text-xs"></i>
+                        </a>
+                        <a href="#" class="w-8 h-8 rounded-full border border-gray-800 flex items-center justify-center text-gray-400 hover:text-white hover:border-white transition-all">
+                            <i class="fa-brands fa-pinterest-p text-xs"></i>
+                        </a>
+                    </div>
+                </div>
+                <a href="{{ route('front.blog.index') }}" class="text-[10px] font-bold uppercase tracking-[0.3em] px-8 py-3 border border-white/10 hover:bg-white hover:text-black transition-all">
+                    Back to Journal
+                </a>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Related Posts -->
+    @if($relatedPosts->count() > 0)
+        <div class="mt-24 py-24 border-t {{ $lineColor }} bg-black/[0.02]">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h3 class="text-xl font-bold uppercase tracking-[0.2em] mb-12 text-center">Suggested Reading</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+                    @foreach($relatedPosts as $related)
+                        <a href="{{ route('front.blog.show', $related->slug) }}" class="group block">
+                            <article>
+                            <div class="relative aspect-[4/5] overflow-hidden mb-6 bg-gray-900 border border-white/5">
+                                @if($related->image)
+                                    <img src="{{ Storage::url($related->image) }}" alt="{{ $related->title }}" 
+                                         class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                                @endif
+                            </div>
+                            <div>
+                                <h4 class="text-base font-semibold mb-2 leading-tight group-hover:text-[#b87333] transition-colors line-clamp-2 uppercase tracking-wide">
+                                    {{ $related->title }}
+                                </h4>
+                                <div class="text-[9px] text-gray-600 uppercase tracking-widest">
+                                    {{ $related->created_at->format('M d, Y') }}
+                                </div>
+                            </div>
+                        </article>
+                        </a>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    @endif
+</article>
+
+<style>
+    .prose p { margin-bottom: 2rem; }
+    .prose strong { color: {{ $isDark ? '#fff' : '#000' }}; font-weight: 600; }
+    .prose h2, .prose h3 { color: {{ $isDark ? '#fff' : '#000' }}; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 3rem; margin-bottom: 1.5rem; }
+</style>
+@endsection
